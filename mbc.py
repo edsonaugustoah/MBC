@@ -58,6 +58,7 @@ async def run_modbus_client():
             # Ler o valor do registrador 3 a cada 5 segundos
             timestamp = int(time.time() * 1000)
             registradores_ref = db.reference(f"Registradores/{mac_address}")
+            print("Conseguiu acessar ", register_ref)
 
             idRegistradores = registradores_ref.get()
             if idRegistradores:
@@ -72,7 +73,7 @@ async def run_modbus_client():
                                 "data": value,
                                 "time": timestamp
                             }
-
+                            print(data)
                             # Criar referência específica para o registrador atual
                             register_ref = db.reference(f"Registros/{mac_address}/{register_number}")
                             register_ref.update({timestamp: data})
