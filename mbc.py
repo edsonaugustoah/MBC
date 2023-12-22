@@ -67,7 +67,7 @@ async def run_modbus_client():
                 for register_number in idRegistradores:
                     try:
                         value = await read_register(client, int(register_number))
-                        print(value)
+                        print("value ",value)
                         if value is not None:
                             timestamp = int(time.time() * 1000)
                             data = {
