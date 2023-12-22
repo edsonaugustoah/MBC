@@ -50,37 +50,49 @@ async def run_modbus_client():
         if not client.is_socket_open():
             raise Exception("A conexão com o servidor Modbus não foi estabelecida com sucesso.")
 
-        # Escrever nos registradores 1 e 2 do escravo com endereço 1
-        await write_registers(client, 1, 20)
-        await write_registers(client, 2, 23)
+        last_execution_time = 0
 
         while True:
-            # Ler o valor do registrador 3 a cada 5 segundos
-            timestamp = int(time.time() * 1000)
-            registradores_ref = db.reference(f"Registradores/{mac_address}")
-            print("Conseguiu acessar")
+            current_time = int(time.time() * 1000)
 
-            idRegistradores = registradores_ref.get()
-            if idRegistradores:
-                registros = {}
+            # Verificar se passaram pelo menos 10 segundos desde a última execução
+            if current_time >= last_execution_time + 10000:
+                timestamp = current_time
 
-                for register_number in idRegistradores:
-                    try:
-                        value = await read_register(client, int(register_number))
-                        if value is not None:
-                            timestamp = int(time.time() * 1000)
-                            data = {
-                                "data": value,
-                                "time": timestamp
-                            }
-                            print(data)
-                            # Criar referência específica para o registrador atual
-                            register_ref = db.reference(f"Registros/{mac_address}/{register_number}")
-                            register_ref.update({timestamp: data})
-                    except Exception as e:
-                        print(f"Erro ao processar registrador {register_number}: {e}")
+                # Obter a referência para a pasta de registradores
+                registradores_ref = db.reference(f"Registradores/{mac_address}")
 
-            await asyncio.sleep(10)
+                print("Conseguiu acessar")
+
+                idRegistradores = registradores_ref.get()
+                if idRegistradores:
+                    registros = {}
+
+                    for register_number in idRegistradores:
+                        try:
+                            # Verificar se é permitido ler o registrador
+                            is_input_allowed_ref = db.reference(f"Registradores/{mac_address}/{register_number}/isInput")
+                            is_input_allowed = is_input_allowed_ref.get()
+
+                            if is_input_allowed is not None and not is_input_allowed:
+                                value = await read_register(client, int(register_number))
+                                if value is not None:
+                                    data = {
+                                        "data": value,
+                                        "time": timestamp
+                                    }
+
+                                    # Criar referência específica para o registrador atual
+                                    register_ref = db.reference(f"Registros/{mac_address}/{register_number}")
+                                    register_ref.update({timestamp: data})
+                        except Exception as e:
+                            print(f"Erro ao processar registrador {register_number}: {e}")
+
+                # Atualizar o tempo da última execução
+                last_execution_time = current_time
+
+            # Aguardar um curto período antes de verificar novamente
+            await asyncio.sleep(0.1)
 
     except Exception as e:
         print(f"Erro durante a execução: {e}")
