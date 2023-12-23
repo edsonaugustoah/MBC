@@ -10,7 +10,7 @@ from firebase_admin import credentials, db, auth
 host = "192.168.1.10"
 port = 502
 mac_address = getmac.get_mac_address().replace(":", "")
-int c=1
+c = 1
 
 # Autenticação Firebase
 cred = credentials.Certificate("esp32.json")
@@ -110,7 +110,7 @@ async def run_modbus_client():
     
         # Verifica se há registros pendentes para processar
         if registradores_pendentes:
-            print(registradores_pentdentes)
+            print(registradores_pendentes)
             await process_pending_registers()
         
         
