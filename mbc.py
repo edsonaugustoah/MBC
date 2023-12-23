@@ -10,7 +10,7 @@ from firebase_admin import credentials, db, auth
 host = "192.168.1.10"
 port = 502
 mac_address = getmac.get_mac_address().replace(":", "")
-c = 1
+
 
 # Autenticação Firebase
 cred = credentials.Certificate("esp32.json")
@@ -99,6 +99,7 @@ registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
 
 
 async def run_modbus_client():
+    c = 1
     timestampAntigo = 0
 
     try:
