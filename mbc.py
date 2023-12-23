@@ -157,13 +157,16 @@ async def start_listening(registradores_input_ref):
         while True:
             await asyncio.sleep(1)
 
+    except asyncio.CancelledError:
+        # Capturar a exceção CancelledError para parar a execução da tarefa
+        pass
+
     except Exception as e:
         print(f"Erro durante a execução da escuta: {e}")
 
     finally:
         # Parar a escuta quando a execução da tarefa for concluída
         listener_registration.stop()
-
 
 if __name__ == "__main__":
     # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
@@ -173,6 +176,22 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     tasks = asyncio.gather(run_modbus_client(), start_listening(registradores_input_ref))
 
-    # Aguardar eventos indefinidamente
-    loop.run_until_complete(tasks)
+    try:
+        # Aguardar eventos indefinidamente
+        loop.run_until_complete(tasks)
+
+    except KeyboardInterrupt:
+        # Capturar a interrupção do teclado (Ctrl+C) para encerrar o programa
+        print("Programa encerrado pelo usuário.")
+
+        # Cancelar as tarefas em execução
+        for task in asyncio.all_tasks():
+            task.cancel()
+
+        # Aguardar o encerramento das tarefas
+        loop.run_until_complete(asyncio.gather(*asyncio.all_tasks()))
+
+    finally:
+        # Fechar o loop
+        loop.close()
 
