@@ -159,17 +159,21 @@ async def on_registradores_input_change(event):
         print(f"Erro durante o processamento de RegistradoresInput: {e}")
 
 
-async def start_listening():
+async def start_listening(registradores_input_ref):
     loop = asyncio.get_running_loop()
     listener_registration = registradores_input_ref.listen(on_registradores_input_change)
     
     with concurrent.futures.ThreadPoolExecutor() as executor:
         await loop.run_in_executor(executor, listener_registration.start)
-    
+
 if __name__ == "__main__":
+    # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
+    registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
+    registradores_input_ref.listen(on_registradores_input_change)
+
     # Iniciar as duas tarefas em paralelo
     loop = asyncio.get_event_loop()
-    tasks = asyncio.gather(run_modbus_client(), start_listening())
+    tasks = asyncio.gather(run_modbus_client(), start_listening(registradores_input_ref))
 
     # Aguardar eventos indefinidamente
     loop.run_until_complete(tasks)
