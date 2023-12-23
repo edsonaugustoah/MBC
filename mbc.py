@@ -47,7 +47,7 @@ async def run_modbus_client():
             client.connect()
 
             timestamp = int(time.time() * 1000)
-
+            start_listening(registradores_input_ref)
             if timestamp >= timestampAntigo + 10000:
                 registradores_ref = db.reference(f"Registradores/{mac_address}")
                 print("Conseguiu acessar")
@@ -174,7 +174,7 @@ if __name__ == "__main__":
 
     # Iniciar as duas tarefas em paralelo
     loop = asyncio.get_event_loop()
-    tasks = asyncio.gather(run_modbus_client(), start_listening(registradores_input_ref))
+    tasks = asyncio.gather(run_modbus_client())
 
     try:
         # Aguardar eventos indefinidamente
