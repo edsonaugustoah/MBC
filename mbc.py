@@ -155,7 +155,7 @@ async def run_modbus_client():
 if __name__ == "__main__":
     # Iniciar as tarefas em paralelo
     loop = asyncio.get_event_loop()
-    tasks = asyncio.gather(run_modbus_client(), loop.run_in_executor(None, listen_for_changes))
+    tasks = asyncio.gather(run_modbus_client(), listen_for_changes())
 
     try:
         # Aguardar eventos indefinidamente
