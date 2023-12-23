@@ -63,12 +63,19 @@ async def run_modbus_client():
                 if idRegistradores:
                     print("Estrutura original de idRegistradores:", idRegistradores)
                     
-                    idRegistradores = [reg for reg in idRegistradores if reg is not None]
-
                     if isinstance(idRegistradores, list):
+                        # Remover entradas None da lista original
+                        idRegistradores = [reg for reg in idRegistradores if reg is not None]
+            
                         # Se idRegistradores for uma lista, convertemos para um mapeamento
                         idRegistradores = {str(reg.get('idRegistrador', '')): reg for reg in idRegistradores}
-
+                    elif isinstance(idRegistradores, dict):
+                        # Se idRegistradores já for um mapeamento, usamos como está
+                        pass
+                    else:
+                        print("Estrutura desconhecida de idRegistradores:", idRegistradores)
+                        continue
+            
                     print("Estrutura após conversão:", idRegistradores)
 
                     registros = {}
