@@ -63,34 +63,29 @@ def on_registradores_input_change(event):
     print("Change detected in RegistradoresInput")
     print("Event data:", event.data)
 
-    try:
-        idRegistradoresInput = event.data
-        if idRegistradoresInput:
-            print("Estrutura original de idRegistradoresInput:", idRegistradoresInput)
+    idRegistradoresInput = event.data
+    if idRegistradoresInput:
+        print("Estrutura original de idRegistradoresInput:", idRegistradoresInput)
+        if isinstance(idRegistradoresInput, list):
+            idRegistradoresInput = [reg for reg in idRegistradoresInput if reg is not None]
+            idRegistradoresInput = {str(reg.get('idRegistrador', '')): reg for reg in idRegistradoresInput}
+        elif isinstance(idRegistradoresInput, dict):
+            pass
+        else:
+            print("Estrutura desconhecida de idRegistradoresInput:", idRegistradoresInput)
+            return
+        print("Estrutura após conversão:", idRegistradoresInput)
+        for register_number, register_data in idRegistradoresInput.items():
+            try:
+                value = register_data.get('valor')
+                if value is not None:
+                    value = int(value)
+                    registradores_pendentes.append((int(register_number), value))
+                    print(f"Registro pendente adicionado: {register_number}, {value}")
+            except Exception as e:
+                print(f"Erro ao processar registrador {register_number}: {e}")
+    print(registradores_pendentes)
 
-            if isinstance(idRegistradoresInput, list):
-                idRegistradoresInput = [reg for reg in idRegistradoresInput if reg is not None]
-                idRegistradoresInput = {str(reg.get('idRegistrador', '')): reg for reg in idRegistradoresInput}
-            elif isinstance(idRegistradoresInput, dict):
-                pass
-            else:
-                print("Estrutura desconhecida de idRegistradoresInput:", idRegistradoresInput)
-                return
-
-            print("Estrutura após conversão:", idRegistradoresInput)
-
-            for register_number, register_data in idRegistradoresInput.items():
-                try:
-                    value = register_data.get('valor')
-                    if value is not None:
-                        value = int(value)
-                        registradores_pendentes.append((int(register_number), value))
-                        print(f"Registro pendente adicionado: {register_number}, {value}")
-                except Exception as e:
-                    print(f"Erro ao processar registrador {register_number}: {e}")
-
-    except Exception as e:
-        print(f"Erro durante o processamento de RegistradoresInput: {e}")
 
 # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
 registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
@@ -106,7 +101,7 @@ async def run_modbus_client():
         print(f"Erro durante Listen: {e}")
 
     while True:
-        print(registradores_pendentes)
+    
         # Verifica se há registros pendentes para processar
         if registradores_pendentes:
             print('registradores pentdentes')
