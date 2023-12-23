@@ -76,6 +76,8 @@ async def on_registradores_input_change(event):
     except Exception as e:
         print(f"Erro durante o processamento de RegistradoresInput: {e}")
 
+async def listen_for_changes():
+    await registradores_input_ref.listen(on_registradores_input_change)
 
 async def run_modbus_client():
     timestampAntigo = 0
@@ -148,11 +150,10 @@ async def run_modbus_client():
 
         await asyncio.sleep(0.1)
 
-
 if __name__ == "__main__":
-    # Iniciar as duas tarefas em paralelo
+    # Iniciar as tarefas em paralelo
     loop = asyncio.get_event_loop()
-    tasks = asyncio.gather(run_modbus_client(), registradores_input_ref.listen(on_registradores_input_change))
+    tasks = asyncio.gather(run_modbus_client(), loop.run_in_executor(None, listen_for_changes))
 
     try:
         # Aguardar eventos indefinidamente
