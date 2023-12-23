@@ -25,6 +25,8 @@ except auth.AuthError as e:
 
 client = ModbusClient.ModbusTcpClient(host, port=port)
 
+start_listening(registradores_input_ref)
+
 async def write_registers(register, value):
     # Escrever no registrador especificado
     client.write_registers(register, [value], unit=1)
@@ -47,7 +49,7 @@ async def run_modbus_client():
             client.connect()
 
             timestamp = int(time.time() * 1000)
-            start_listening(registradores_input_ref)
+            
             if timestamp >= timestampAntigo + 10000:
                 registradores_ref = db.reference(f"Registradores/{mac_address}")
                 print("Conseguiu acessar")
