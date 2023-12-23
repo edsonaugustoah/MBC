@@ -122,7 +122,7 @@ async def run_modbus_client():
 async def on_registradores_input_change(event):
     print("Change detected in RegistradoresInput")
     print("Event data:", event.data)
-    
+
     try:
         idRegistradoresInput = event.data
         if idRegistradoresInput:
@@ -143,19 +143,20 @@ async def on_registradores_input_change(event):
 
             print("Estrutura após conversão:", idRegistradoresInput)
 
-        # Iterar sobre os registradores e escrever no Modbus
-        for register_number, register_data in idRegistradoresInput.items():
-            try:
-                value = register_data.get('valor')
-                if value is not None:
-                    value = int(value)
-                    await write_registers(client, int(register_number), value)
-                    print(f"Valor {value} escrito no registrador {register_number}")
-            except Exception as e:
-                print(f"Erro ao processar registrador {register_number}: {e}")
-    
-      except Exception as e:
+            # Iterar sobre os registradores e escrever no Modbus
+            for register_number, register_data in idRegistradoresInput.items():
+                try:
+                    value = register_data.get('valor')
+                    if value is not None:
+                        value = int(value)
+                        await write_registers(client, int(register_number), value)
+                        print(f"Valor {value} escrito no registrador {register_number}")
+                except Exception as e:
+                    print(f"Erro ao processar registrador {register_number}: {e}")
+
+    except Exception as e:
         print(f"Erro durante o processamento de RegistradoresInput: {e}")
+
 
 if __name__ == "__main__":
     # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
