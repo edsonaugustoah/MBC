@@ -77,7 +77,9 @@ async def on_registradores_input_change(event):
         print(f"Erro durante o processamento de RegistradoresInput: {e}")
 
 async def listen_for_changes():
-    await registradores_input_ref.listen(on_registradores_input_change)
+    print('chamou')
+    observer = registradores_input_ref.listen(on_registradores_input_change)
+    await observer.wait()
 
 async def run_modbus_client():
     timestampAntigo = 0
