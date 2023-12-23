@@ -23,9 +23,7 @@ try:
 except auth.AuthError as e:
     print(f"Erro de autenticação: {e}")
 
-client = ModbusClient.ModbusTcpClient(host, port=port)
 
-start_listening(registradores_input_ref)
 
 async def write_registers(register, value):
     # Escrever no registrador especificado
@@ -39,6 +37,69 @@ async def read_register(register):
     except ModbusIOException:
         print(f"Erro na leitura do registrador {register}")
         return None
+
+async def start_listening(registradores_input_ref):
+    loop = asyncio.get_running_loop()
+    listener_registration = registradores_input_ref.listen(on_registradores_input_change)
+
+    try:
+        # Iniciar a escuta
+        listener_registration.start()
+
+        # Manter a execução indefinidamente
+        while True:
+            await asyncio.sleep(1)
+
+    except asyncio.CancelledError:
+        # Capturar a exceção CancelledError para parar a execução da tarefa
+        pass
+
+    except Exception as e:
+        print(f"Erro durante a execução da escuta: {e}")
+
+    finally:
+        # Parar a escuta quando a execução da tarefa for concluída
+        listener_registration.stop()
+
+async def on_registradores_input_change(event):
+    print("Change detected in RegistradoresInput")
+    print("Event data:", event.data)
+
+    try:
+        idRegistradoresInput = event.data
+        if idRegistradoresInput:
+            print("Estrutura original de idRegistradoresInput:", idRegistradoresInput)
+
+            if isinstance(idRegistradoresInput, list):
+                idRegistradoresInput = [reg for reg in idRegistradoresInput if reg is not None]
+                idRegistradoresInput = {str(reg.get('idRegistrador', '')): reg for reg in idRegistradoresInput}
+            elif isinstance(idRegistradoresInput, dict):
+                pass
+            else:
+                print("Estrutura desconhecida de idRegistradoresInput:", idRegistradoresInput)
+                return
+
+            print("Estrutura após conversão:", idRegistradoresInput)
+
+            for register_number, register_data in idRegistradoresInput.items():
+                try:
+                    value = register_data.get('valor')
+                    if value is not None:
+                        value = int(value)
+                        await write_registers(int(register_number), value)
+                        print(f"Valor {value} escrito no registrador {register_number}")
+                except Exception as e:
+                    print(f"Erro ao processar registrador {register_number}: {e}")
+
+    except Exception as e:
+        print(f"Erro durante o processamento de RegistradoresInput: {e}")
+
+
+client = ModbusClient.ModbusTcpClient(host, port=port)
+
+start_listening(registradores_input_ref)
+
+
 
 async def run_modbus_client():
     timestampAntigo = 0
@@ -114,61 +175,6 @@ async def run_modbus_client():
 
         await asyncio.sleep(0.1)
 
-async def on_registradores_input_change(event):
-    print("Change detected in RegistradoresInput")
-    print("Event data:", event.data)
-
-    try:
-        idRegistradoresInput = event.data
-        if idRegistradoresInput:
-            print("Estrutura original de idRegistradoresInput:", idRegistradoresInput)
-
-            if isinstance(idRegistradoresInput, list):
-                idRegistradoresInput = [reg for reg in idRegistradoresInput if reg is not None]
-                idRegistradoresInput = {str(reg.get('idRegistrador', '')): reg for reg in idRegistradoresInput}
-            elif isinstance(idRegistradoresInput, dict):
-                pass
-            else:
-                print("Estrutura desconhecida de idRegistradoresInput:", idRegistradoresInput)
-                return
-
-            print("Estrutura após conversão:", idRegistradoresInput)
-
-            for register_number, register_data in idRegistradoresInput.items():
-                try:
-                    value = register_data.get('valor')
-                    if value is not None:
-                        value = int(value)
-                        await write_registers(int(register_number), value)
-                        print(f"Valor {value} escrito no registrador {register_number}")
-                except Exception as e:
-                    print(f"Erro ao processar registrador {register_number}: {e}")
-
-    except Exception as e:
-        print(f"Erro durante o processamento de RegistradoresInput: {e}")
-
-async def start_listening(registradores_input_ref):
-    loop = asyncio.get_running_loop()
-    listener_registration = registradores_input_ref.listen(on_registradores_input_change)
-
-    try:
-        # Iniciar a escuta
-        listener_registration.start()
-
-        # Manter a execução indefinidamente
-        while True:
-            await asyncio.sleep(1)
-
-    except asyncio.CancelledError:
-        # Capturar a exceção CancelledError para parar a execução da tarefa
-        pass
-
-    except Exception as e:
-        print(f"Erro durante a execução da escuta: {e}")
-
-    finally:
-        # Parar a escuta quando a execução da tarefa for concluída
-        listener_registration.stop()
 
 if __name__ == "__main__":
     # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
