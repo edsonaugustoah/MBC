@@ -37,7 +37,7 @@ async def read_register(register):
         print(f"Erro na leitura do registrador {register}")
         return None
 
-async def on_registradores_input_change(event):
+def on_registradores_input_change(event):
     print("Change detected in RegistradoresInput")
     print("Event data:", event.data)
 
@@ -77,8 +77,11 @@ async def listen_for_changes():
 
 # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
 registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
-registradores_input_ref.listen(callback=on_registradores_input_change)
 
+try:
+    registradores_input_ref.listen(callback=on_registradores_input_change)
+except Exception as e:
+        print(f"Erro durante Listen: {e}")
 
 async def run_modbus_client():
     timestampAntigo = 0
