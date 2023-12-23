@@ -75,7 +75,14 @@ async def run_modbus_client():
                     else:
                         print("Estrutura desconhecida de idRegistradores:", idRegistradores)
                         continue
-            
+
+                    # Remover elementos com isInput = True
+                    idRegistradores = {
+                        key: value 
+                        for key, value in idRegistradores.items() 
+                        if not value.get('isInput', False)
+                    }
+
                     print("Estrutura após conversão:", idRegistradores)
 
                     registros = {}
