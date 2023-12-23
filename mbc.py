@@ -26,7 +26,6 @@ client = ModbusClient.ModbusTcpClient(host, port=port)
 
 # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
 registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
-registradores_input_ref.listen(callback=on_registradores_input_change)
 
 async def write_registers(register, value):
     # Escrever no registrador especificado
@@ -41,7 +40,10 @@ async def read_register(register):
         print(f"Erro na leitura do registrador {register}")
         return None
 
-async def on_registradores_input_change(event):
+def on_registradores_input_change(event):
+    asyncio.ensure_future(on_registradores_input_change_async(event))
+
+async def on_registradores_input_change_async(event):
     print("Change detected in RegistradoresInput")
     print("Event data:", event.data)
 
@@ -76,8 +78,8 @@ async def on_registradores_input_change(event):
 
 async def listen_for_changes():
     print('chamou')
-    while True:
-        await asyncio.sleep(1)
+    observer = registradores_input_ref.listen(callback=on_registradores_input_change)
+    await observer.wait()
 
 async def run_modbus_client():
     timestampAntigo = 0
@@ -153,7 +155,7 @@ async def run_modbus_client():
 if __name__ == "__main__":
     # Iniciar as tarefas em paralelo
     loop = asyncio.get_event_loop()
-    tasks = asyncio.gather(run_modbus_client(), listen_for_changes())
+    tasks = asyncio.gather(run_modbus_client(), loop.run_in_executor(None, listen_for_changes))
 
     try:
         # Aguardar eventos indefinidamente
