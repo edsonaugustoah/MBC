@@ -46,12 +46,18 @@ async def read_register(register):
 
 async def process_pending_registers():
     # Processa registros pendentes
-    for registro in registradores_pendentes:
-        register_number, value = registro
-        await write_registers(register_number, value)
+    while registradores_pendentes:
+        register, value = registradores_pendentes.pop(0)  # Retire o primeiro registro da lista
 
-    # Limpa a lista após o processamento
-    registradores_pendentes.clear()
+        try:
+            print(f"Processando registro pendente - Registrador: {register}, Valor: {value}")
+            await write_registers(register, value)
+        except Exception as e:
+            print(f"Erro ao processar registrador {register}: {e}")
+
+    # Aguarda um curto período antes de verificar novamente
+    await asyncio.sleep(0.1)
+
 
 def on_registradores_input_change(event):
     print("Change detected in RegistradoresInput")
