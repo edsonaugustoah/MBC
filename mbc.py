@@ -10,15 +10,11 @@ import concurrent.futures
 # Definição de variáveis
 host = "192.168.1.10"
 port = 502
-client = ModbusClient.ModbusTcpClient(host, port=port)
+mac_address = getmac.get_mac_address().replace(":", "")
 
 # Autenticação Firebase
 cred = credentials.Certificate("esp32.json")
 firebase_admin.initialize_app(cred, {'databaseURL': 'https://esp32-001-b5578-default-rtdb.firebaseio.com/'})
-
-# Obter o MAC address
-mac_address = getmac.get_mac_address().replace(":", "")
-print("Endereco MAC: ", mac_address)
 
 # Fazer login com email e senha
 try:
@@ -26,6 +22,8 @@ try:
     print("Autenticação bem-sucedida!")
 except auth.AuthError as e:
     print(f"Erro de autenticação: {e}")
+
+client = ModbusClient.ModbusTcpClient(host, port=port)
 
 async def write_registers(register, value):
     # Escrever no registrador especificado
@@ -163,4 +161,3 @@ if __name__ == "__main__":
 
     # Aguardar eventos indefinidamente
     loop.run_until_complete(tasks)
-
