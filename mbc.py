@@ -24,18 +24,34 @@ except auth.AuthError as e:
 
 client = ModbusClient.ModbusTcpClient(host, port=port)
 
+# Lista global para armazenar os registros pendentes
+registradores_pendentes = []
+
 async def write_registers(register, value):
     # Escrever no registrador especificado
-    client.write_registers(register, [value], unit=1)
+    try:
+        await client.write_registers(register, [value], unit=1)
+        print(f"Valor {value} escrito no registrador {register}")
+    except Exception as e:
+        print(f"Erro ao processar registrador {register}: {e}")
 
 async def read_register(register):
     try:
         # Ler o valor do registrador especificado
-        result = client.read_holding_registers(register, 1, unit=1)
+        result = await client.read_holding_registers(register, 1, unit=1)
         return result.registers[0]
     except ModbusIOException:
         print(f"Erro na leitura do registrador {register}")
         return None
+
+async def process_pending_registers():
+    # Processa registros pendentes
+    for registro in registradores_pendentes:
+        register_number, value = registro
+        await write_registers(register_number, value)
+
+    # Limpa a lista após o processamento
+    registradores_pendentes.clear()
 
 def on_registradores_input_change(event):
     print("Change detected in RegistradoresInput")
@@ -62,8 +78,8 @@ def on_registradores_input_change(event):
                     value = register_data.get('valor')
                     if value is not None:
                         value = int(value)
-                        asyncio.create_task(write_registers(int(register_number), value))
-                        print(f"Valor {value} escrito no registrador {register_number}")
+                        registradores_pendentes.append((int(register_number), value))
+                        print(f"Registro pendente adicionado: {register_number}, {value}")
                 except Exception as e:
                     print(f"Erro ao processar registrador {register_number}: {e}")
 
@@ -83,8 +99,12 @@ async def run_modbus_client():
 
     while True:
         try:
+            # Verifica se há registros pendentes para processar
+            if registradores_pendentes:
+                await process_pending_registers()
+
             # Conectar ao servidor Modbus
-            client.connect()
+            await client.connect()
 
             timestamp = int(time.time() * 1000)
             if timestamp >= timestampAntigo + 10000:
@@ -144,8 +164,8 @@ async def run_modbus_client():
             await asyncio.sleep(0.1)
 
             # Fechar a conexão se estiver aberta
-            if client.is_socket_open():
-                client.close()
+            if await client.is_socket_open():
+                await client.close()
 
         await asyncio.sleep(0.1)
 
