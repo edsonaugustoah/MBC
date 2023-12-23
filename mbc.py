@@ -61,6 +61,11 @@ async def run_modbus_client():
 
                 idRegistradores = registradores_ref.get()
                 if idRegistradores:
+                    
+                    if isinstance(idRegistradores, list):
+                        # Se idRegistradores for uma lista, convertemos para um mapeamento
+                        idRegistradores = {str(i): reg for i, reg in enumerate(idRegistradores, start=1)}
+
                     registros = {}
 
                     for register_number in idRegistradores:
