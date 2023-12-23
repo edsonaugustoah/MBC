@@ -161,11 +161,14 @@ async def on_registradores_input_change(event):
 if __name__ == "__main__":
     # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
     registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
-    registradores_input_ref.listen(on_registradores_input_change)
+
+    async def start_listening():
+        await registradores_input_ref.listen(on_registradores_input_change)
 
     # Iniciar as duas tarefas em paralelo
     loop = asyncio.get_event_loop()
-    tasks = asyncio.gather(run_modbus_client())
+    tasks = asyncio.gather(run_modbus_client(), start_listening())
 
     # Aguardar eventos indefinidamente
     loop.run_until_complete(tasks)
+
