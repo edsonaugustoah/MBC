@@ -39,11 +39,9 @@ async def read_register(client, register):
         return None
 
 async def run_modbus_client():
-    
     timestampAntigo = 0
 
-    while True:    
-        
+    while True:
         # Criar cliente Modbus TCP assíncrono
         client = ModbusClient.ModbusTcpClient(host, port=port)
 
@@ -58,18 +56,17 @@ async def run_modbus_client():
             timestamp = int(time.time() * 1000)
 
             if timestamp >= timestampAntigo + 10000:
-
                 registradores_ref = db.reference(f"Registradores/{mac_address}")
                 print("Conseguiu acessar")
 
                 idRegistradores = registradores_ref.get()
                 if idRegistradores:
                     print("Estrutura original de idRegistradores:", idRegistradores)
-                    
+
                     if isinstance(idRegistradores, list):
                         # Remover entradas None da lista original
                         idRegistradores = [reg for reg in idRegistradores if reg is not None]
-            
+
                         # Se idRegistradores for uma lista, convertemos para um mapeamento
                         idRegistradores = {str(reg.get('idRegistrador', '')): reg for reg in idRegistradores}
                     elif isinstance(idRegistradores, dict):
@@ -81,8 +78,8 @@ async def run_modbus_client():
 
                     # Remover elementos com isInput = True
                     idRegistradores = {
-                        key: value 
-                        for key, value in idRegistradores.items() 
+                        key: value
+                        for key, value in idRegistradores.items()
                         if not value.get('isInput', False)
                     }
 
@@ -93,7 +90,7 @@ async def run_modbus_client():
                     for register_number in idRegistradores:
                         try:
                             value = await read_register(client, int(register_number))
-                            print("value ",value)
+                            print("value ", value)
                             if value is not None:
                                 timestamp = int(time.time() * 1000)
                                 data = {
@@ -120,5 +117,54 @@ async def run_modbus_client():
             if client.is_socket_open():
                 client.close()
 
+        await asyncio.sleep(0.1)
+
+async def on_registradores_input_change(event):
+    """
+    Função chamada sempre que houver uma alteração na pasta 'RegistradoresInput/{mac_address}'
+    """
+    print("RegistradoresInput alterado:", event.path)
+
+    registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
+    idRegistradoresInput = registradores_input_ref.get()
+
+    if idRegistradoresInput:
+        print("Estrutura original de idRegistradoresInput:", idRegistradoresInput)
+
+        if isinstance(idRegistradoresInput, list):
+            # Remover entradas None da lista original
+            idRegistradoresInput = [reg for reg in idRegistradoresInput if reg is not None]
+
+            # Se idRegistradoresInput for uma lista, convertemos para um mapeamento
+            idRegistradoresInput = {str(reg.get('idRegistrador', '')): reg for reg in idRegistradoresInput}
+        elif isinstance(idRegistradoresInput, dict):
+            # Se idRegistradoresInput já for um mapeamento, usamos como está
+            pass
+        else:
+            print("Estrutura desconhecida de idRegistradoresInput:", idRegistradoresInput)
+            return
+
+        print("Estrutura após conversão:", idRegistradoresInput)
+
+        # Iterar sobre os registradores e escrever no Modbus
+        for register_number, register_data in idRegistradoresInput.items():
+            try:
+                value = register_data.get('valor')
+                if value is not None:
+                    value = int(value)
+                    await write_registers(client, int(register_number), value)
+                    print(f"Valor {value} escrito no registrador {register_number}")
+            except Exception as e:
+                print(f"Erro ao processar registrador {register_number}: {e}")
+
 if __name__ == "__main__":
-    asyncio.run(run_modbus_client())
+    # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
+    registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
+    registradores_input_ref.listen(on_registradores_input_change)
+
+    # Iniciar as duas tarefas em paralelo
+    loop = asyncio.get_event_loop()
+    tasks = asyncio.gather(run_modbus_client(), loop=loop)
+
+    # Aguardar eventos indefinidamente
+    loop.run_until_complete(tasks)
