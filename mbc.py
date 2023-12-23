@@ -62,18 +62,13 @@ def on_registradores_input_change(event):
                     value = register_data.get('valor')
                     if value is not None:
                         value = int(value)
-                        write_registers(int(register_number), value)
+                        asyncio.create_task(write_registers(int(register_number), value))
                         print(f"Valor {value} escrito no registrador {register_number}")
                 except Exception as e:
                     print(f"Erro ao processar registrador {register_number}: {e}")
 
     except Exception as e:
         print(f"Erro durante o processamento de RegistradoresInput: {e}")
-
-async def listen_for_changes():
-    print('chamou')
-    while True:
-        await asyncio.sleep(1)
 
 # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
 registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
