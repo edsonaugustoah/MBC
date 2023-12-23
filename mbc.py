@@ -5,7 +5,6 @@ import getmac
 import time
 import firebase_admin
 from firebase_admin import credentials, db, auth
-import concurrent.futures
 
 # Definição de variáveis
 host = "192.168.1.10"
@@ -23,11 +22,16 @@ try:
 except auth.AuthError as e:
     print(f"Erro de autenticação: {e}")
 
+client = ModbusClient.ModbusTcpClient(host, port=port)
+
+# Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
+registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
 
 
 async def write_registers(register, value):
     # Escrever no registrador especificado
     client.write_registers(register, [value], unit=1)
+
 
 async def read_register(register):
     try:
@@ -38,28 +42,6 @@ async def read_register(register):
         print(f"Erro na leitura do registrador {register}")
         return None
 
-async def start_listening(registradores_input_ref):
-    loop = asyncio.get_running_loop()
-    listener_registration = registradores_input_ref.listen(on_registradores_input_change)
-
-    try:
-        # Iniciar a escuta
-        listener_registration.start()
-
-        # Manter a execução indefinidamente
-        while True:
-            await asyncio.sleep(1)
-
-    except asyncio.CancelledError:
-        # Capturar a exceção CancelledError para parar a execução da tarefa
-        pass
-
-    except Exception as e:
-        print(f"Erro durante a execução da escuta: {e}")
-
-    finally:
-        # Parar a escuta quando a execução da tarefa for concluída
-        listener_registration.stop()
 
 async def on_registradores_input_change(event):
     print("Change detected in RegistradoresInput")
@@ -95,29 +77,15 @@ async def on_registradores_input_change(event):
         print(f"Erro durante o processamento de RegistradoresInput: {e}")
 
 
-client = ModbusClient.ModbusTcpClient(host, port=port)
-
-# Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
-registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
-
-
-
-
-
-
 async def run_modbus_client():
     timestampAntigo = 0
 
     while True:
-    
-        start_listening(registradores_input_ref)
-
         try:
             # Conectar ao servidor Modbus
             client.connect()
 
             timestamp = int(time.time() * 1000)
-            
             if timestamp >= timestampAntigo + 10000:
                 registradores_ref = db.reference(f"Registradores/{mac_address}")
                 print("Conseguiu acessar")
@@ -148,8 +116,6 @@ async def run_modbus_client():
 
                     print("Estrutura após conversão:", idRegistradores)
 
-                    registros = {}
-
                     for register_number in idRegistradores:
                         try:
                             value = await read_register(int(register_number))
@@ -167,7 +133,7 @@ async def run_modbus_client():
                         except Exception as e:
                             print(f"Erro ao processar registrador {register_number}: {e}")
 
-                timestampAntigo = timestamp
+                    timestampAntigo = timestamp
 
         except Exception as e:
             print(f"Erro durante a execução: {e}")
@@ -184,10 +150,9 @@ async def run_modbus_client():
 
 
 if __name__ == "__main__":
-
     # Iniciar as duas tarefas em paralelo
     loop = asyncio.get_event_loop()
-    tasks = asyncio.gather(run_modbus_client())
+    tasks = asyncio.gather(run_modbus_client(), registradores_input_ref.listen(on_registradores_input_change))
 
     try:
         # Aguardar eventos indefinidamente
@@ -207,4 +172,3 @@ if __name__ == "__main__":
     finally:
         # Fechar o loop
         loop.close()
-
