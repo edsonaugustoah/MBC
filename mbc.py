@@ -104,7 +104,7 @@ async def run_modbus_client():
     timestampAntigo = 0
 
     while True:
-        
+        print(registradores_pendentes)
         # Verifica se há registros pendentes para processar
         if registradores_pendentes:
             print('registradores pentdentes')
