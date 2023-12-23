@@ -101,7 +101,7 @@ client = ModbusClient.ModbusTcpClient(host, port=port)
 registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
 
 
-start_listening(registradores_input_ref)
+
 
 
 
@@ -109,6 +109,9 @@ async def run_modbus_client():
     timestampAntigo = 0
 
     while True:
+    
+    await start_listening(registradores_input_ref)
+
         try:
             # Conectar ao servidor Modbus
             client.connect()
