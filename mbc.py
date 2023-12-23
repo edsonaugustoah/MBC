@@ -148,8 +148,22 @@ async def on_registradores_input_change(event):
 async def start_listening(registradores_input_ref):
     loop = asyncio.get_running_loop()
     listener_registration = registradores_input_ref.listen(on_registradores_input_change)
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        await loop.run_in_executor(executor, listener_registration.start)
+
+    try:
+        # Iniciar a escuta
+        listener_registration.start()
+
+        # Manter a execução indefinidamente
+        while True:
+            await asyncio.sleep(1)
+
+    except Exception as e:
+        print(f"Erro durante a execução da escuta: {e}")
+
+    finally:
+        # Parar a escuta quando a execução da tarefa for concluída
+        listener_registration.stop()
+
 
 if __name__ == "__main__":
     # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
@@ -161,3 +175,4 @@ if __name__ == "__main__":
 
     # Aguardar eventos indefinidamente
     loop.run_until_complete(tasks)
+
