@@ -105,7 +105,7 @@ async def run_modbus_client():
     
         # Verifica se há registros pendentes para processar
         if registradores_pendentes:
-            print(registradores pentdentes)
+            print(registradores_pentdentes)
             await process_pending_registers()
         
         
