@@ -39,7 +39,9 @@ async def read_register(client, register):
         return None
 
 async def run_modbus_client():
-        
+    
+    timestampAntigo = 0
+
     while True:    
         
         # Criar cliente Modbus TCP assíncrono
@@ -53,9 +55,10 @@ async def run_modbus_client():
             if not client.is_socket_open():
                 raise Exception("A conexão com o servidor Modbus não foi estabelecida com sucesso.")
 
-            while True:
-                # Ler o valor do registrador 3 a cada 5 segundos
-                timestamp = int(time.time() * 1000)
+            timestamp = int(time.time() * 1000)
+
+            if timestamp >= timestampAntigo + 10000:
+
                 registradores_ref = db.reference(f"Registradores/{mac_address}")
                 print("Conseguiu acessar")
 
@@ -104,7 +107,7 @@ async def run_modbus_client():
                         except Exception as e:
                             print(f"Erro ao processar registrador {register_number}: {e}")
 
-                await asyncio.sleep(10)
+                timestampAntigo = timestamp
 
         except Exception as e:
             print(f"Erro durante a execução: {e}")
