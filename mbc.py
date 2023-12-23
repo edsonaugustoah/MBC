@@ -130,13 +130,9 @@ async def on_registradores_input_change(event):
             print("Estrutura original de idRegistradoresInput:", idRegistradoresInput)
 
             if isinstance(idRegistradoresInput, list):
-                # Remover entradas None da lista original
                 idRegistradoresInput = [reg for reg in idRegistradoresInput if reg is not None]
-
-                # Se idRegistradoresInput for uma lista, convertemos para um mapeamento
                 idRegistradoresInput = {str(reg.get('idRegistrador', '')): reg for reg in idRegistradoresInput}
             elif isinstance(idRegistradoresInput, dict):
-                # Se idRegistradoresInput já for um mapeamento, usamos como está
                 pass
             else:
                 print("Estrutura desconhecida de idRegistradoresInput:", idRegistradoresInput)
@@ -144,7 +140,6 @@ async def on_registradores_input_change(event):
 
             print("Estrutura após conversão:", idRegistradoresInput)
 
-            # Iterar sobre os registradores e escrever no Modbus
             for register_number, register_data in idRegistradoresInput.items():
                 try:
                     value = register_data.get('valor')
@@ -158,18 +153,14 @@ async def on_registradores_input_change(event):
     except Exception as e:
         print(f"Erro durante o processamento de RegistradoresInput: {e}")
 
-
 async def start_listening(registradores_input_ref):
     loop = asyncio.get_running_loop()
     listener_registration = registradores_input_ref.listen(on_registradores_input_change)
-    
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        await loop.run_in_executor(executor, listener_registration.start)
+    await listener_registration
 
 if __name__ == "__main__":
     # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
     registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
-    registradores_input_ref.listen(on_registradores_input_change)
 
     # Iniciar as duas tarefas em paralelo
     loop = asyncio.get_event_loop()
