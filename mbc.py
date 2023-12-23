@@ -62,7 +62,7 @@ def on_registradores_input_change(event):
                     value = register_data.get('valor')
                     if value is not None:
                         value = int(value)
-                        await write_registers(int(register_number), value)
+                        write_registers(int(register_number), value)
                         print(f"Valor {value} escrito no registrador {register_number}")
                 except Exception as e:
                     print(f"Erro ao processar registrador {register_number}: {e}")
