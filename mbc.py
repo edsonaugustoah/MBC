@@ -62,6 +62,7 @@ async def process_pending_registers():
 def on_registradores_input_change(event):
     print("Change detected in RegistradoresInput")
     print("Event data:", event.data)
+    print(registradores_pendentes)
 
     idRegistradoresInput = event.data
     if idRegistradoresInput:
