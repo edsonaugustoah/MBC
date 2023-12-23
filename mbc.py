@@ -110,7 +110,7 @@ async def run_modbus_client():
 
     while True:
     
-        await start_listening(registradores_input_ref)
+        start_listening(registradores_input_ref)
 
         try:
             # Conectar ao servidor Modbus
