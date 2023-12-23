@@ -64,7 +64,7 @@ def on_registradores_input_change(event):
     print("Event data:", event.data)
     print(registradores_pendentes)
 
-    idRegistradoresInput = event.data
+    idRegistradoresInput = event
     if idRegistradoresInput:
         print("Estrutura original de idRegistradoresInput:", idRegistradoresInput)
         if isinstance(idRegistradoresInput, list):
@@ -105,7 +105,7 @@ async def run_modbus_client():
     
         # Verifica se há registros pendentes para processar
         if registradores_pendentes:
-            print('registradores pentdentes')
+            print(registradores pentdentes)
             await process_pending_registers()
         
         
