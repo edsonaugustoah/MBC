@@ -10,6 +10,7 @@ import concurrent.futures
 # Definição de variáveis
 host = "192.168.1.10"
 port = 502
+client = ModbusClient.ModbusTcpClient(host, port=port)
 
 # Autenticação Firebase
 cred = credentials.Certificate("esp32.json")
@@ -26,14 +27,14 @@ try:
 except auth.AuthError as e:
     print(f"Erro de autenticação: {e}")
 
-async def write_registers(client, register, value):
+async def write_registers(register, value):
     # Escrever no registrador especificado
-    client.write_registers(register, [value], slave=1)
+    client.write_registers(register, [value], unit=1)
 
-async def read_register(client, register):
+async def read_register(register):
     try:
         # Ler o valor do registrador especificado
-        result = client.read_holding_registers(register, 1, slave=1)
+        result = client.read_holding_registers(register, 1, unit=1)
         return result.registers[0]
     except ModbusIOException:
         print(f"Erro na leitura do registrador {register}")
@@ -43,16 +44,9 @@ async def run_modbus_client():
     timestampAntigo = 0
 
     while True:
-        # Criar cliente Modbus TCP assíncrono
-        client = ModbusClient.ModbusTcpClient(host, port=port)
-
         try:
             # Conectar ao servidor Modbus
             client.connect()
-
-            # Testar a conexão
-            if not client.is_socket_open():
-                raise Exception("A conexão com o servidor Modbus não foi estabelecida com sucesso.")
 
             timestamp = int(time.time() * 1000)
 
@@ -90,7 +84,7 @@ async def run_modbus_client():
 
                     for register_number in idRegistradores:
                         try:
-                            value = await read_register(client, int(register_number))
+                            value = await read_register(int(register_number))
                             print("value ", value)
                             if value is not None:
                                 timestamp = int(time.time() * 1000)
@@ -145,7 +139,7 @@ async def on_registradores_input_change(event):
                     value = register_data.get('valor')
                     if value is not None:
                         value = int(value)
-                        await write_registers(client, int(register_number), value)
+                        await write_registers(int(register_number), value)
                         print(f"Valor {value} escrito no registrador {register_number}")
                 except Exception as e:
                     print(f"Erro ao processar registrador {register_number}: {e}")
