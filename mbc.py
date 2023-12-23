@@ -67,7 +67,7 @@ async def run_modbus_client():
 
                     if isinstance(idRegistradores, list):
                         # Se idRegistradores for uma lista, convertemos para um mapeamento
-                        idRegistradores = {str(reg.get('idRegistrador')): reg for reg in idRegistradores}
+                        idRegistradores = {str(reg.get('idRegistrador', '')): reg for reg in idRegistradores}
 
                     print("Estrutura após conversão:", idRegistradores)
 
