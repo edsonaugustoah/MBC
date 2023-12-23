@@ -26,12 +26,11 @@ client = ModbusClient.ModbusTcpClient(host, port=port)
 
 # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
 registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
-
+registradores_input_ref.listen(callback=on_registradores_input_change)
 
 async def write_registers(register, value):
     # Escrever no registrador especificado
     client.write_registers(register, [value], unit=1)
-
 
 async def read_register(register):
     try:
@@ -41,7 +40,6 @@ async def read_register(register):
     except ModbusIOException:
         print(f"Erro na leitura do registrador {register}")
         return None
-
 
 async def on_registradores_input_change(event):
     print("Change detected in RegistradoresInput")
@@ -78,7 +76,8 @@ async def on_registradores_input_change(event):
 
 async def listen_for_changes():
     print('chamou')
-    observer = registradores_input_ref.listen(on_registradores_input_change)
+    while True:
+        await asyncio.sleep(1)
 
 async def run_modbus_client():
     timestampAntigo = 0
