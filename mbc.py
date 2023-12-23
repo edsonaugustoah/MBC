@@ -97,6 +97,10 @@ async def on_registradores_input_change(event):
 
 client = ModbusClient.ModbusTcpClient(host, port=port)
 
+# Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
+registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
+
+
 start_listening(registradores_input_ref)
 
 
@@ -177,8 +181,6 @@ async def run_modbus_client():
 
 
 if __name__ == "__main__":
-    # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
-    registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
 
     # Iniciar as duas tarefas em paralelo
     loop = asyncio.get_event_loop()
