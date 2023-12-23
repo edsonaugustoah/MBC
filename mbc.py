@@ -164,7 +164,7 @@ if __name__ == "__main__":
 
     # Iniciar as duas tarefas em paralelo
     loop = asyncio.get_event_loop()
-    tasks = asyncio.gather(run_modbus_client(), loop=loop)
+    tasks = asyncio.gather(run_modbus_client())
 
     # Aguardar eventos indefinidamente
     loop.run_until_complete(tasks)
