@@ -64,7 +64,7 @@ def on_registradores_input_change(event):
     print("Event data:", event.data)
     print(registradores_pendentes)
 
-    idRegistradoresInput = event
+    idRegistradoresInput = event.data
     if idRegistradoresInput:
         print("Estrutura original de idRegistradoresInput:", idRegistradoresInput)
         if isinstance(idRegistradoresInput, list):
@@ -85,13 +85,17 @@ def on_registradores_input_change(event):
                     print(f"Registro pendente adicionado: {register_number}, {value}")
             except Exception as e:
                 print(f"Erro ao processar registrador {register_number}: {e}")
+        
+        # Remover os dados de RegistradoresInput/{mac_address} após processar os registros pendentes
+        registradores_input_ref.delete()
+
     print(registradores_pendentes)
 
 
 # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
 registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
 
-
+c=1
 
 async def run_modbus_client():
     timestampAntigo = 0
@@ -160,7 +164,13 @@ async def run_modbus_client():
                                 register_ref.update({timestamp: data})
                         except Exception as e:
                             print(f"Erro ao processar registrador {register_number}: {e}")
-
+                    register_ref = db.reference(f"RegistradoresInput/{mac_address}")
+                    data = {
+                            "valor": 9,
+                            "idRegistrador": c
+                    }
+                    register_ref.update({8: data})
+                    c = c + 1
                     timestampAntigo = timestamp
 
         except Exception as e:
