@@ -95,16 +95,17 @@ def on_registradores_input_change(event):
 # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
 registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
 
+
+
 async def run_modbus_client():
     timestampAntigo = 0
 
+    try:
+        registradores_input_ref.listen(callback=on_registradores_input_change)
+    except Exception as e:
+        print(f"Erro durante Listen: {e}")
+
     while True:
-        
-        try:
-            registradores_input_ref.listen(callback=on_registradores_input_change)
-        except Exception as e:
-            print(f"Erro durante Listen: {e}")
-        
         print(registradores_pendentes)
         # Verifica se há registros pendentes para processar
         if registradores_pendentes:
