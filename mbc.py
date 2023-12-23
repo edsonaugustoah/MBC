@@ -10,6 +10,7 @@ from firebase_admin import credentials, db, auth
 host = "192.168.1.10"
 port = 502
 mac_address = getmac.get_mac_address().replace(":", "")
+int c=1
 
 # Autenticação Firebase
 cred = credentials.Certificate("esp32.json")
@@ -95,7 +96,7 @@ def on_registradores_input_change(event):
 # Adicionar o observador para a pasta 'RegistradoresInput/{mac_address}'
 registradores_input_ref = db.reference(f"RegistradoresInput/{mac_address}")
 
-c=1
+
 
 async def run_modbus_client():
     timestampAntigo = 0
@@ -166,8 +167,8 @@ async def run_modbus_client():
                             print(f"Erro ao processar registrador {register_number}: {e}")
                     register_ref = db.reference(f"RegistradoresInput/{mac_address}")
                     data = {
-                            "valor": 9,
-                            "idRegistrador": c
+                            "valor": c,
+                            "idRegistrador": 8
                     }
                     register_ref.update({8: data})
                     c = c + 1
